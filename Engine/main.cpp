@@ -1,9 +1,9 @@
 
-#include "Application.h"
+#include "D3DApp.h"
 
 int main()
 {
-    Application app;
+    D3DApp app;
 
     app.Run();
 
