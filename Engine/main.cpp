@@ -3,9 +3,6 @@
 
 int main()
 {
-    D3DApp app;
-
-    app.Run();
 
     return 0;
 }
