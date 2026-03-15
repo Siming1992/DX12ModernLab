@@ -91,10 +91,13 @@ inline std::wstring AnsiToWString(const std::string &str)
 class d3dUtil
 {
 public:
+    // 静态成员函数：不依赖对象实例，可直接通过 d3dUtil::IsKeyDown 调用。
     static bool IsKeyDown(int vkeyCode);
 
+    // HRESULT -> 可读字符串（便于日志/调试）。
     static std::string ToString(HRESULT hr);
 
+    // 内联静态函数：常量缓冲区按 256 字节对齐（D3D12 硬件要求）。
     static UINT CalcConstantBufferByteSize(UINT byteSize)
     {
         // Constant buffers must be a multiple of the minimum hardware
@@ -111,8 +114,10 @@ public:
         return (byteSize + 255) & ~255;
     }
 
+    // const std::wstring&：按引用传参避免拷贝，const 保证函数内不修改参数。
     static Microsoft::WRL::ComPtr<ID3DBlob> LoadBinary(const std::wstring &filename);
 
+    // ComPtr<T>& 作为输出参数：调用者可拿到上传堆资源并控制其生命周期。
     static Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuffer(
         ID3D12Device *device,
         ID3D12GraphicsCommandList *cmdList,
@@ -120,6 +125,7 @@ public:
         UINT64 byteSize,
         Microsoft::WRL::ComPtr<ID3D12Resource> &uploadBuffer);
 
+    // 编译 HLSL：entrypoint 是入口函数名，target 是着色器模型（如 vs_5_1/ps_5_1）。
     static Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
         const std::wstring &filename,
         const D3D_SHADER_MACRO *defines,
@@ -130,9 +136,12 @@ public:
 class DxException
 {
 public:
+    // = default：使用编译器生成的默认构造函数。
     DxException() = default;
+    // 构造函数参数用于记录错误码、函数名、文件名、行号，便于定位异常来源。
     DxException(HRESULT hr, const std::wstring &functionName, const std::wstring &filename, int lineNumber);
 
+    // const 成员函数：承诺不修改对象状态，可安全用于只读格式化输出。
     std::wstring ToString() const;
 
     HRESULT ErrorCode = S_OK;

@@ -5,6 +5,7 @@
 
 using Microsoft::WRL::ComPtr;
 
+// 构造函数初始化列表：在进入函数体前初始化成员，效率高且可初始化 const/引用成员。
 DxException::DxException(HRESULT hr, const std::wstring &functionName, const std::wstring &filename, int lineNumber) : ErrorCode(hr),
                                                                                                                        FunctionName(functionName),
                                                                                                                        Filename(filename),
@@ -14,20 +15,24 @@ DxException::DxException(HRESULT hr, const std::wstring &functionName, const std
 
 bool d3dUtil::IsKeyDown(int vkeyCode)
 {
+    // 按位与 0x8000：检测高位是否为 1，表示按键当前处于按下状态。
     return (GetAsyncKeyState(vkeyCode) & 0x8000) != 0;
 }
 
 ComPtr<ID3DBlob> d3dUtil::LoadBinary(const std::wstring &filename)
 {
+    // 以二进制模式打开文件，避免文本模式对字节流做换行转换。
     std::ifstream fin(filename, std::ios::binary);
 
     fin.seekg(0, std::ios_base::end);
+    // pos_type 表示流位置类型；这里先取文件大小，再回到开头读取。
     std::ifstream::pos_type size = (int)fin.tellg();
     fin.seekg(0, std::ios_base::beg);
 
     ComPtr<ID3DBlob> blob;
     ThrowIfFailed(D3DCreateBlob(size, blob.GetAddressOf()));
 
+    // 强转为 char* 以按字节写入 Blob 缓冲区。
     fin.read((char *)blob->GetBufferPointer(), size);
     fin.close();
 
@@ -41,6 +46,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> d3dUtil::CreateDefaultBuffer(
     UINT64 byteSize,
     Microsoft::WRL::ComPtr<ID3D12Resource> &uploadBuffer)
 {
+    // RAII 智能指针：ComPtr 会自动调用 Release，减少 COM 资源泄漏风险。
     ComPtr<ID3D12Resource> defaultBuffer;
 
     // Create the actual default buffer resource.
@@ -73,6 +79,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> d3dUtil::CreateDefaultBuffer(
     // the intermediate upload heap data will be copied to mBuffer.
     cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),
                                                                       D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+    // 模板函数调用：UpdateSubresources<1> 中的 <1> 是模板参数，表示子资源数量。
     UpdateSubresources<1>(cmdList, defaultBuffer.Get(), uploadBuffer.Get(), 0, 0, 1, &subResourceData);
     cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),
                                                                       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
@@ -92,6 +99,7 @@ ComPtr<ID3DBlob> d3dUtil::CompileShader(
 {
     UINT compileFlags = 0;
 #if defined(DEBUG) || defined(_DEBUG)
+    // 条件编译：仅在 Debug 构建中启用调试信息和跳过优化。
     compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
@@ -114,7 +122,9 @@ std::wstring DxException::ToString() const
 {
     // Get the string description of the error code.
     _com_error err(ErrorCode);
+    // _com_error::ErrorMessage returns TCHAR*, which maps to wchar_t* when UNICODE is enabled.
     std::wstring msg = err.ErrorMessage();
 
+    // L"..." 是宽字符串字面量；std::to_wstring 把数字转为宽字符串便于拼接。
     return FunctionName + L" failed in " + Filename + L"; line " + std::to_wstring(LineNumber) + L"; error: " + msg;
 }

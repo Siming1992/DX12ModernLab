@@ -125,6 +125,10 @@ protected:
     Microsoft::WRL::ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount]; // 交换链缓冲区资源数组，表示交换链中每个缓冲区的资源对象。
     Microsoft::WRL::ComPtr<ID3D12Resource> mDepthStencilBuffer;                    // 深度模版缓冲区资源，表示用于深度测试和模版测试的缓冲区资源对象。
 
+    // 描述符堆（描述符的连续内存块）
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mRtvHeap; // 渲染目标视图(RTV)描述符堆
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDsvHeap; // 深度模板视图(DSV)描述符堆
+
     D3D12_VIEWPORT mScreenViewport; // 屏幕视口，表示渲染目标的视口信息，包括位置和大小等。
     D3D12_RECT mScissorRect;        // 定义剪裁矩形，表示渲染目标的剪裁区域，用于限制渲染操作的范围。
 
@@ -133,7 +137,7 @@ protected:
     // DSV描述符大小，表示深度模版视图（DSV）描述符的大小，用于计算描述符堆中的偏移量。
     UINT mDsvDescriptorSize = 0;
     // CBV/SRV/UAV描述符大小，表示常量缓冲区视图（CBV）、着色器资源视图（SRV）和无序访问视图（UAV）描述符的大小，用于计算描述符堆中的偏移量。
-    UINT mCbvSrvDescriptorSize = 0;
+    UINT mCbvSrvUavDescriptorSize = 0;
 
     // 以下成员可在派生类中访问和修改，表示应用程序的主窗口标题、Direct3D驱动类型、后备缓冲区格式和深度模版缓冲区格式等信息。
     std::wstring mMainWndCaption = L"D3D12 Application";             // 主窗口标题，表示应用程序主窗口的标题文本。
