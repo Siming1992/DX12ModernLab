@@ -1,7 +1,16 @@
+option(DX12_ENGINE_USE_WINMAIN "以 Windows 子系统构建 Engine（入口为 WinMain）" ON)
 
-add_executable(Engine
-    main.cpp
-)
+if(DX12_ENGINE_USE_WINMAIN)
+    add_executable(Engine WIN32
+        InitDirect3DApp.cpp
+    )
+else()
+    add_executable(Engine
+        InitDirect3DApp.cpp
+    )
+endif()
+
+message(STATUS "DX12_ENGINE_USE_WINMAIN = ${DX12_ENGINE_USE_WINMAIN}")
 
 target_link_libraries(Engine
     PRIVATE
