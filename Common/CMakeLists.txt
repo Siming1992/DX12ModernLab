@@ -4,6 +4,7 @@ add_library(DX12Common STATIC
 	d3dUtil.cpp
 	DDSTextureLoader.cpp
 	GameTimer.cpp
+	MathHelper.cpp
 )
 
 target_include_directories(DX12Common

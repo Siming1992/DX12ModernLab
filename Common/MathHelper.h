@@ -8,6 +8,7 @@
 
 #include <Windows.h>
 #include <DirectXMath.h>
+#include <cstdlib>
 #include <cstdint>
 
 class MathHelper
@@ -16,7 +17,7 @@ public:
     // Returns random float in [0, 1).
     static float RandF()
     {
-        return (float)(rand()) / (float)RAND_MAX;
+        return (float)(std::rand()) / (float)RAND_MAX;
     }
 
     // Returns random float in [a, b).
@@ -27,7 +28,7 @@ public:
 
     static int Rand(int a, int b)
     {
-        return a + rand() % ((b - a) + 1);
+        return a + std::rand() % ((b - a) + 1);
     }
 
     template <typename T>
