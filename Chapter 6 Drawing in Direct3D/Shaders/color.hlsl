@@ -4,6 +4,7 @@
 // Transforms and colors geometry.
 //***************************************************************************************
 
+// 常量缓冲区：绑定到b0寄存器（b=buffer，0是寄存器编号）
 cbuffer cbPerObject : register(b0)
 {
 	float4x4 gWorldViewProj; 

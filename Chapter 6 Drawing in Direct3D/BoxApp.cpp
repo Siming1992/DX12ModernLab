@@ -155,6 +155,9 @@ void BoxApp::Draw(const GameTimer &gt)
 
     // 资源状态转换：将后台缓冲区从展示状态转为渲染目标状态
     // CD3DX12_RESOURCE_BARRIER::Transition：创建资源转换屏障
+    // 何时需要资源状态转换？在DX12中，资源必须处于正确的状态才能被GPU访问。
+    // 渲染前需要将后台缓冲区转换为渲染目标状态，渲染完成后再转换回展示状态，以确保GPU能够正确访问资源进行渲染和显示。
+    // 什么操作属于渲染操作？设置渲染目标、清除渲染目标和深度缓冲区、设置描述符堆和根签名、设置输入装配数据、绘制调用等都属于渲染操作。
     mCommandList->ResourceBarrier(1,
                                   &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
@@ -315,16 +318,29 @@ void BoxApp::BuildRootSignature()
 {
     // 根签名的作用：定义着色器程序的输入资源（类似函数参数）
 
-    // 根参数数组（1个根参数）
+    // -------------------------- 步骤1：定义根参数（对应HLSL的单个资源需求） --------------------------
+    // 根参数 = 着色器的单个资源入口（这里只有1个：CBV）
     CD3DX12_ROOT_PARAMETER slotRootParameter[1];
 
+    // -------------------------- 步骤2：定义描述符范围（指定HLSL的寄存器绑定） --------------------------
+    // 描述符范围 = 告诉DX12：这个资源是哪种类型、占几个寄存器、从哪个寄存器开始
     // 创建描述符表（包含1个CBV）
     CD3DX12_DESCRIPTOR_RANGE cbvTable;
+    // Init参数详解（直接对应HLSL的cbuffer）：
+    // 1. D3D12_DESCRIPTOR_RANGE_TYPE_CBV：资源类型是常量缓冲区（对应HLSL的cbuffer）
+    // 2. 1：数量是1个CBV（我们只有1个cbPerObject）
+    // 3. 0：从b0寄存器开始（对应HLSL的register(b0)）
     // Init参数：描述符类型、数量、基寄存器
     cbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+    // -------------------------- 步骤3：将根参数关联到描述符范围 --------------------------
+    // InitAsDescriptorTable：表示这个根参数是一个「描述符表」（管理多个描述符的集合）
+    // 参数：1个描述符范围（&cbvTable） → 对应我们的1个CBV
+    // 作用：把“根参数0”和“b0寄存器的CBV”绑定起来
     // 将根参数初始化为描述符表
     slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable);
 
+    // -------------------------- 步骤4：定义根签名描述（汇总所有资源需求） --------------------------
+    // 根签名描述 = 把所有根参数打包，告诉DX12“这是着色器需要的所有资源”
     // 根签名描述结构体
     CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
         1,                 // 根参数数量
@@ -334,6 +350,8 @@ void BoxApp::BuildRootSignature()
         // 根签名标志：允许输入汇编阶段使用输入布局
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
+    // -------------------------- 步骤5：序列化根签名（转换为GPU能识别的格式） --------------------------
+    // 根签名描述是“人类可读的结构”，需要转成二进制数据（序列化）才能给GPU用
     // 序列化根签名（将根签名描述转换为GPU可识别的二进制格式）
     ComPtr<ID3DBlob> serializedRootSig = nullptr;
     ComPtr<ID3DBlob> errorBlob = nullptr;
@@ -347,6 +365,9 @@ void BoxApp::BuildRootSignature()
     }
     ThrowIfFailed(hr);
 
+    // -------------------------- 步骤6：创建根签名对象（最终生效） --------------------------
+    // 用序列化后的二进制数据，创建DX12的根签名对象（mRootSignature）
+    // 后续PSO会绑定这个根签名，告诉GPU“按这个规则匹配着色器资源”
     // 创建根签名对象
     ThrowIfFailed(md3dDevice->CreateRootSignature(
         0,

@@ -50,6 +50,7 @@ D3DApp::D3DApp(HINSTANCE hInstance)
 D3DApp::~D3DApp()
 {
     // 如果D3D设备已创建，先刷新命令队列，确保所有GPU命令执行完毕
+    // 为什么需要刷新命令队列？因为DX12是异步执行的，GPU可能还在处理之前提交的命令，如果直接释放资源可能会导致GPU访问已释放的资源，造成崩溃或未定义行为。
     if (md3dDevice != nullptr)
         FlushCommandQueue();
 }
@@ -89,6 +90,8 @@ void D3DApp::Set4xMsaaState(bool value)
         m4xMsaaState = value;
 
         // 重新创建交换链和缓冲区，应用新的多重采样设置
+        // 重新创建交换链：因为多重采样设置是交换链缓冲区的一部分，必须重建交换链才能生效
+        // 何时需要重建交换链：当多重采样状态改变时，交换链的缓冲区格式和采样描述需要更新，因此必须重建交换链。
         CreateSwapChain();
         OnResize();
     }
@@ -165,6 +168,9 @@ bool D3DApp::Initialize()
 // 创建渲染目标试图（RTV）和深度模版试图（DSV）描述符堆
 // DX2核心概念：描述符堆是GPU资源视图（如RTV/DSV/SRV/UAV）的内存容器，存储资源的描述符信息，
 // 相当于资源的“句柄”或“指针”，用于GPU访问资源。每种类型的描述符堆有不同的用途和访问权限。
+// 何时需要创建RTV和DSV描述符堆？在初始化Direct3D设备时需要创建这些描述符堆，因为它们是存储渲染目标视图和深度模板视图描述符的必要组件。
+// 没有这些描述符堆，就无法创建和管理RTV和DSV资源，导致无法进行渲染操作。
+// 因此，在InitDirect3D函数中调用CreateRtvAndDsvDescriptorHeaps是必要的步骤，以确保后续的渲染流程能够正常进行。
 void D3DApp::CreateRtvAndDsvDescriptorHeaps()
 {
     // 初始化RTV描述符堆描述信息
@@ -568,6 +574,10 @@ bool D3DApp::InitDirect3D()
     return true;
 }
 
+// 何时需要创建命令队列、命令分配器和命令列表？在初始化Direct3D设备时需要创建这些对象，因为它们是执行GPU命令的核心组件。
+// 命令队列用于提交命令列表，命令分配器用于分配命令列表的内存，命令列表用于记录GPU命令。
+// 没有这些对象，就无法向GPU发送渲染指令或进行资源管理操作。
+// 因此，在InitDirect3D函数中创建这些对象是必要的步骤，以确保后续的渲染和资源管理能够正常进行。
 void D3DApp::CreateCommandObjects()
 {
     // 命令队列描述结构体：描述命令队列的属性
