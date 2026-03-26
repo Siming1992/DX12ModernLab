@@ -503,7 +503,7 @@ bool D3DApp::InitMainWindow()
 
     return true;
 }
-
+// 初始化Direct3D设备和相关资源，为后续的渲染做好准备
 bool D3DApp::InitDirect3D()
 {
 #if defined(DEBUG) || defined(_DEBUG)
