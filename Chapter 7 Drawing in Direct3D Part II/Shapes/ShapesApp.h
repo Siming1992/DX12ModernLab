@@ -28,6 +28,7 @@ using namespace DirectX::PackedVector;
 // 避免CPU等待GPU，提升渲染性能
 const int gNumFrameResources = 3;
 
+// 我们把单次绘制调用过程中，需要向渲染流水线提交的数据集称为渲染项（render item）。
 // 轻量级结构体：存储绘制一个3D物体所需的所有参数
 // 不同应用的渲染参数不同，所以这个结构是自定义的
 struct RenderItem

@@ -4,6 +4,7 @@ add_library(DX12Common STATIC
 	d3dUtil.cpp
 	DDSTextureLoader.cpp
 	GameTimer.cpp
+	GeometryGenerator.cpp
 	MathHelper.cpp
 )
 

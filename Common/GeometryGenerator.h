@@ -22,6 +22,7 @@
 // 几何体生成器类：静态工具类，专门用来生成立方体、球体、圆柱、网格等3D模型数据
 class GeometryGenerator
 {
+public:
     using uint16 = std::uint16_t;
     using uint32 = std::uint32_t;
 

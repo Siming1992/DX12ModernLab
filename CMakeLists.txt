@@ -91,6 +91,11 @@ function(dx12_add_demo)
 		add_executable(${DX12_DEMO_TARGET} ${DX12_DEMO_SOURCES})
 	endif()
 
+	# 每个示例使用独立运行目录，避免共享输出目录中的资源同名覆盖。
+	set_target_properties(${DX12_DEMO_TARGET} PROPERTIES
+		RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/${DX12_DEMO_TARGET}"
+	)
+
 	# 链接通用库。PRIVATE 表示依赖只作用于当前目标，不向外传递。
 	target_link_libraries(${DX12_DEMO_TARGET} PRIVATE DX12Common)
 
